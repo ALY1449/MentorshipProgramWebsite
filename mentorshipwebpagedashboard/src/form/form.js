@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Stepper from "@mui/material/Stepper";
 import Step from "@mui/material/Step";
@@ -13,36 +13,67 @@ import { MentorBasicSkills } from "./subform.js/MentorBasicSkills";
 import { MentorExpertSkills } from "./subform.js/MentorExpertSkills";
 import { GoalsPreferred } from "./subform.js/GoalsPreferred";
 import { PersonalityType } from "./subform.js/PersonalityType";
-
-const steps = [
-  {
-    label: "Create an account",
-    input: <CreateAccount />,
-  },
-  {
-    label: "Details",
-    input: MentorDetails(),
-  },
-  {
-    label: "Basic Skills",
-    input: MentorBasicSkills(),
-  },
-  {
-    label: "Expert Skills",
-    input: MentorExpertSkills(),
-  },
-  {
-    label: "Goals",
-    input: GoalsPreferred(),
-  },
-  {
-    label: "Personality Type",
-    input: PersonalityType(),
-  },
-];
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function VerticalLinearStepper() {
   const [activeStep, setActiveStep] = React.useState(0);
+  const [credentials, setCredentials] = React.useState({
+    email: "",
+    password: "",
+  });
+  const [user, setUser] = React.useState("");
+
+  const handleCredentialsChange = (newCredentials) => {
+    setCredentials(newCredentials); //working
+  };
+
+  const handleUserType = (userType) => {
+    setUser(userType);
+  };
+
+  // useEffect(() => {
+  //   console.log("asnwer " + credentials.email, credentials.password, user);
+  // }, [credentials.email, credentials.password, user]);
+
+  useEffect(() => {
+    if (activeStep === 1) {
+      //onSubmit();
+    }
+  }, [activeStep]);
+
+  const steps = [
+    {
+      label: "Create an account",
+      input: (
+        <CreateAccount
+          onCredentialsChange={handleCredentialsChange}
+          userType={handleUserType}
+        />
+      ),
+    },
+    {
+      label: "Details",
+      input: MentorDetails(),
+    },
+    {
+      label: "Basic Skills",
+      input: MentorBasicSkills(),
+    },
+    {
+      label: "Expert Skills",
+      input: MentorExpertSkills(),
+    },
+    {
+      label: "Goals",
+      input: GoalsPreferred(),
+    },
+    {
+      label: "Personality Type",
+      input: PersonalityType(),
+    },
+  ];
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -56,6 +87,32 @@ export default function VerticalLinearStepper() {
     setActiveStep(0);
   };
 
+  const onSubmit = async () => {
+    await createUserWithEmailAndPassword(
+      auth,
+      credentials.email,
+      credentials.password
+    )
+      .then((userCredential) => {
+        // Signed in
+        try {
+          const docRef = addDoc(collection(db, user), {
+            emailAddress: credentials.email,
+            userType: user,
+          });
+          console.log("Document written with ID: ", docRef.id);
+        } catch (e) {
+          console.error("Error adding document: ", e);
+        }
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+        // ..
+      });
+  };
   return (
     <Box sx={{ maxWidth: 700 }}>
       <Stepper activeStep={activeStep} orientation="vertical">
@@ -78,6 +135,12 @@ export default function VerticalLinearStepper() {
                     variant="contained"
                     onClick={handleNext}
                     sx={{ mt: 1, mr: 1 }}
+                    disabled={
+                      activeStep === 0 &&
+                      (credentials.email === "" ||
+                        credentials.password === "" ||
+                        user === "")
+                    }
                   >
                     {index === steps.length - 1 ? "Finish" : "Continue"}
                   </Button>
