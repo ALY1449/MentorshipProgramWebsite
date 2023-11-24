@@ -23,7 +23,13 @@ export default function VerticalLinearStepper() {
     email: "",
     password: "",
   });
-  const [user, setUser] = React.useState("");
+  const [userType, setUser] = React.useState("");
+  const [details, setDetails] = React.useState({
+    fullname: "",
+    organisation: "",
+    industry: "",
+    specialisation: "",
+  });
 
   const handleCredentialsChange = (newCredentials) => {
     setCredentials(newCredentials); //working
@@ -34,14 +40,8 @@ export default function VerticalLinearStepper() {
   };
 
   // useEffect(() => {
-  //   console.log("asnwer " + credentials.email, credentials.password, user);
-  // }, [credentials.email, credentials.password, user]);
-
-  useEffect(() => {
-    if (activeStep === 1) {
-      //onSubmit();
-    }
-  }, [activeStep]);
+  //   console.log("asnwer " + credentials.email, credentials.password, userType);
+  // }, [credentials.email, credentials.password, userType]);
 
   const steps = [
     {
@@ -55,23 +55,38 @@ export default function VerticalLinearStepper() {
     },
     {
       label: "Details",
-      input: MentorDetails(),
+      input: [
+        { participant: "Mentor", subform: MentorDetails() },
+        { participant: "Mentee", subform: null },
+      ],
     },
     {
       label: "Basic Skills",
-      input: MentorBasicSkills(),
+      input: [
+        { participant: "Mentor", subform: MentorBasicSkills() },
+        { participant: "Mentee", subform: null },
+      ],
     },
     {
       label: "Expert Skills",
-      input: MentorExpertSkills(),
+      input: [
+        { participant: "Mentor", subform: MentorExpertSkills() },
+        { participant: "Mentee", subform: null },
+      ],
     },
     {
       label: "Goals",
-      input: GoalsPreferred(),
+      input: [
+        { participant: "Mentor", subform: GoalsPreferred() },
+        { participant: "Mentee", subform: GoalsPreferred() },
+      ],
     },
     {
       label: "Personality Type",
-      input: PersonalityType(),
+      input: [
+        { participant: "Mentor", subform: PersonalityType() },
+        { participant: "Mentee", subform: GoalsPreferred() },
+      ],
     },
   ];
 
@@ -96,13 +111,13 @@ export default function VerticalLinearStepper() {
       .then((userCredential) => {
         // Signed in
         try {
-          const docRef = addDoc(collection(db, user), {
+          const docRef = addDoc(collection(db, userType), {
             emailAddress: credentials.email,
-            userType: user,
+            userType: userType,
           });
-          console.log("Document written with ID: ", docRef.id);
+          //console.log("Document written with ID: ", docRef.id);
         } catch (e) {
-          console.error("Error adding document: ", e);
+          //console.error("Error adding document: ", e);
         }
         // ...
       })
@@ -128,7 +143,18 @@ export default function VerticalLinearStepper() {
               {step.label}
             </StepLabel>
             <StepContent>
-              <div>{step.input}</div>
+              {index === 0 ? (
+                // Render the subform based on the userType chosen in the first step
+                <div>{step.input}</div>
+              ) : (
+                // Render the subform based on the participant chosen in the previous step
+                <div>
+                  {
+                    step.input.find((item) => item.participant === userType)
+                      ?.subform
+                  }
+                </div>
+              )}
               <Box sx={{ mb: 2 }}>
                 <div>
                   <Button
@@ -139,7 +165,7 @@ export default function VerticalLinearStepper() {
                       activeStep === 0 &&
                       (credentials.email === "" ||
                         credentials.password === "" ||
-                        user === "")
+                        userType === null)
                     }
                   >
                     {index === steps.length - 1 ? "Finish" : "Continue"}
