@@ -15,7 +15,7 @@ import { GoalsPreferred } from "./subform.js/GoalsPreferred";
 import { PersonalityType } from "./subform.js/PersonalityType";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, setDoc, doc, addDoc } from "firebase/firestore";
 
 export default function VerticalLinearStepper() {
   const [activeStep, setActiveStep] = React.useState(0);
@@ -31,6 +31,10 @@ export default function VerticalLinearStepper() {
     specialisation: "",
   });
 
+  const handleDetailsChange = (newDetails) => {
+    setDetails(newDetails);
+  };
+
   const handleCredentialsChange = (newCredentials) => {
     setCredentials(newCredentials); //working
   };
@@ -40,8 +44,18 @@ export default function VerticalLinearStepper() {
   };
 
   // useEffect(() => {
-  //   console.log("asnwer " + credentials.email, credentials.password, userType);
-  // }, [credentials.email, credentials.password, userType]);
+  //   console.log(
+  //     "asnwer " + details.fullname,
+  //     details.organisation,
+  //     details.industry,
+  //     details.specialisation
+  //   );
+  // }, [
+  //   details.fullname,
+  //   details.industry,
+  //   details.organisation,
+  //   details.specialisation,
+  // ]);
 
   const steps = [
     {
@@ -56,7 +70,12 @@ export default function VerticalLinearStepper() {
     {
       label: "Details",
       input: [
-        { participant: "Mentor", subform: MentorDetails() },
+        {
+          participant: "Mentor",
+          subform: (
+            <MentorDetails onHandleDetailsChange={handleDetailsChange} />
+          ),
+        },
         { participant: "Mentee", subform: null },
       ],
     },
@@ -102,6 +121,12 @@ export default function VerticalLinearStepper() {
     setActiveStep(0);
   };
 
+  useEffect(() => {
+    if (activeStep === 2) {
+      //onSubmit();
+    }
+  }, [activeStep]);
+
   const onSubmit = async () => {
     await createUserWithEmailAndPassword(
       auth,
@@ -111,11 +136,40 @@ export default function VerticalLinearStepper() {
       .then((userCredential) => {
         // Signed in
         try {
-          const docRef = addDoc(collection(db, userType), {
+          const userID = auth.currentUser;
+          const collectionRef = collection(db, userType);
+          const userUID = userID.uid;
+          const userDocRef = doc(collectionRef, userUID);
+          //console.log(userID.uid);
+          const accountRef = doc(userDocRef, "account", userUID);
+          const detailsRef = doc(userDocRef, "details", userUID);
+
+          const accountData = {
             emailAddress: credentials.email,
             userType: userType,
-          });
-          //console.log("Document written with ID: ", docRef.id);
+          };
+          const detailsData = {
+            fullname: details.fullname,
+            organisation: details.organisation,
+            industry: details.industry,
+            specialisation: details.specialisation,
+          };
+          setDoc(accountRef, accountData)
+            .then(() => {
+              console.log("Account details added with custom ID successfully.");
+            })
+            .catch((error) => {
+              console.error("Error adding personal details:", error);
+            });
+          setDoc(detailsRef, detailsData)
+            .then(() => {
+              console.log("Account details added with custom ID successfully.");
+            })
+            .catch((error) => {
+              console.error("Error adding personal details:", error);
+            });
+
+          console.log("Document written: ");
         } catch (e) {
           //console.error("Error adding document: ", e);
         }
@@ -128,6 +182,7 @@ export default function VerticalLinearStepper() {
         // ..
       });
   };
+
   return (
     <Box sx={{ maxWidth: 700 }}>
       <Stepper activeStep={activeStep} orientation="vertical">
