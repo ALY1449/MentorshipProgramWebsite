@@ -34,6 +34,10 @@ export default function VerticalLinearStepper() {
     softskills: [],
     industryskills: [],
   });
+  const [mentorESkills, setMentorESkills] = React.useState({
+    softskills: [],
+    industryskills: [],
+  });
 
   const handleDetailsChange = (newDetails) => {
     setDetails(newDetails);
@@ -49,6 +53,9 @@ export default function VerticalLinearStepper() {
 
   const handleMBasicSkills = (newMentorBSkills) => {
     setMentorBSkills(newMentorBSkills);
+  };
+  const handleEBasicSkills = (newMentorESkills) => {
+    setMentorESkills(newMentorESkills);
   };
 
   // useEffect(() => {
@@ -96,7 +103,12 @@ export default function VerticalLinearStepper() {
     {
       label: "Expert Skills",
       input: [
-        { participant: "Mentor", subform: MentorExpertSkills() },
+        {
+          participant: "Mentor",
+          subform: (
+            <MentorExpertSkills onHandleEBasicSkills={handleEBasicSkills} />
+          ),
+        },
         { participant: "Mentee", subform: null },
       ],
     },
@@ -129,7 +141,7 @@ export default function VerticalLinearStepper() {
   };
 
   useEffect(() => {
-    if (activeStep === 3) {
+    if (activeStep === 4) {
       onSubmit();
     }
   }, [activeStep]);
@@ -161,6 +173,17 @@ export default function VerticalLinearStepper() {
             userUID
           );
 
+          const expertSoftSkillsRef = doc(
+            userDocRef,
+            "expertSoftSkills",
+            userUID
+          );
+          const expertIndustrySkillsRef = doc(
+            userDocRef,
+            "expertIndustrySkills",
+            userUID
+          );
+
           const accountData = {
             emailAddress: credentials.email,
             userType: userType,
@@ -180,9 +203,18 @@ export default function VerticalLinearStepper() {
             industrySkill_1: mentorBSkills.industryskills[0],
             industrySkill_2: mentorBSkills.industryskills[1],
           };
+
+          const expertSoftSkillsData = {
+            softSkill_1: mentorESkills.softskills[0],
+            softSkill_2: mentorESkills.softskills[1],
+          };
+          const expertIndustrySkillsData = {
+            industrySkill_1: mentorESkills.industryskills[0],
+            industrySkill_2: mentorESkills.industryskills[1],
+          };
           setDoc(accountRef, accountData)
             .then(() => {
-              console.log("Account details added with custom ID successfully.");
+              console.log("Account added with custom ID successfully.");
             })
             .catch((error) => {
               console.error("Error adding personal details:", error);
@@ -190,7 +222,7 @@ export default function VerticalLinearStepper() {
 
           setDoc(detailsRef, detailsData)
             .then(() => {
-              console.log("Account details added with custom ID successfully.");
+              console.log("Details added with custom ID successfully.");
             })
             .catch((error) => {
               console.error("Error adding personal details:", error);
@@ -198,7 +230,9 @@ export default function VerticalLinearStepper() {
 
           setDoc(basicSoftSkillsRef, basicSoftSkillsData)
             .then(() => {
-              console.log("Account details added with custom ID successfully.");
+              console.log(
+                "Basic Soft skills added with custom ID successfully."
+              );
             })
             .catch((error) => {
               console.error("Error adding personal details:", error);
@@ -206,7 +240,29 @@ export default function VerticalLinearStepper() {
 
           setDoc(basicIndustrySkillsRef, basicIndustrySkillsData)
             .then(() => {
-              console.log("Account details added with custom ID successfully.");
+              console.log(
+                "Basic Industry skills added with custom ID successfully."
+              );
+            })
+            .catch((error) => {
+              console.error("Error adding personal details:", error);
+            });
+
+          setDoc(expertSoftSkillsRef, expertSoftSkillsData)
+            .then(() => {
+              console.log(
+                "Expert Soft skills added with custom ID successfully."
+              );
+            })
+            .catch((error) => {
+              console.error("Error adding personal details:", error);
+            });
+
+          setDoc(expertIndustrySkillsRef, expertIndustrySkillsData)
+            .then(() => {
+              console.log(
+                "Expert industry skills added with custom ID successfully."
+              );
             })
             .catch((error) => {
               console.error("Error adding personal details:", error);
